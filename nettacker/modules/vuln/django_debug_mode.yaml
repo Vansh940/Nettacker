@@ -1,0 +1,43 @@
+info:
+  name: django_debug_mode_vuln
+  author: Vansh
+  severity: 3
+  description: Detects Django applications exposing debug mode information.
+  reference:
+    - https://docs.djangoproject.com/en/stable/howto/deployment/checklist/
+  profiles:
+    - vuln
+    - http
+    - medium_severity
+
+payloads:
+  - library: http
+    steps:
+      - method: get
+        timeout: 3
+        headers:
+          User-Agent: "{user_agent}"
+        allow_redirects: false
+        ssl: false
+        url:
+          nettacker_fuzzer:
+            input_format: "{{schema}}://{target}:{{ports}}/nettacker-django-debug-check/"
+            prefix: ""
+            suffix: ""
+            interceptors:
+            data:
+              schema:
+                - "http"
+                - "https"
+              ports:
+                - 80
+                - 443
+        response:
+          condition_type: and
+          conditions:
+            status_code:
+              regex: "404"
+              reverse: false
+            content:
+              regex: 'DEBUG\s*=\s*True'
+              reverse: false
